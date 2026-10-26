@@ -1,0 +1,9 @@
+package com.staymmate;
+import jakarta.persistence.*;import java.time.*;
+@Entity class Pg { @Id @GeneratedValue(strategy=GenerationType.IDENTITY) public Long id; public String name,location,city,type,image,owner,phone,description,amenities,sharingType; public int rent,deposit,travelMinutes,availableBeds; public boolean ac,mess,wifi,laundry,parking; public double rating; }
+@Entity class Roommate { @Id @GeneratedValue(strategy=GenerationType.IDENTITY) public Long id; public String name,email,phone,location,gender,schedule,sleep,food,habits,bio; @Lob public String avatar; public int age,budget; public boolean active=true; }
+@Entity class Review { @Id @GeneratedValue(strategy=GenerationType.IDENTITY) public Long id;public String name,comment;public int stars;public LocalDate created=LocalDate.now();@ManyToOne public Pg pg; }
+@Entity @Table(name="pg_leads") class Lead { @Id @GeneratedValue(strategy=GenerationType.IDENTITY) public Long id;public String name,email,phone,message,status="PENDING_OWNER_REPLY",ownerReply,userReply,smsStatus="NOT_SENT",smsError;public LocalDateTime created=LocalDateTime.now(),repliedAt,userRepliedAt;@ManyToOne public Pg pg; }
+@Entity class ConnectionRequest { @Id @GeneratedValue(strategy=GenerationType.IDENTITY) public Long id;public String requesterName,requesterEmail,requesterPhone,recipientPhone,message,status="PENDING",smsStatus="NOT_SENT",smsError;public LocalDateTime created=LocalDateTime.now();@ManyToOne public Roommate roommate; }
+@Entity class DirectMessage { @Id @GeneratedValue(strategy=GenerationType.IDENTITY) public Long id;public String senderEmail,body;public LocalDateTime created=LocalDateTime.now();@ManyToOne public ConnectionRequest connection; }
+@Entity class OwnerAccount { @Id @GeneratedValue(strategy=GenerationType.IDENTITY) public Long id; public String name,email,phone; public boolean active=true; }

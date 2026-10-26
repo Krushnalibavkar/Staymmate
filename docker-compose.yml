@@ -1,0 +1,32 @@
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: staymmate
+      MYSQL_USER: staymmate
+      MYSQL_PASSWORD: change-this-password
+      MYSQL_ROOT_PASSWORD: change-root-password
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pchange-root-password"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+  backend:
+    build: ./backend
+    environment:
+      DB_URL: jdbc:mysql://db:3306/staymmate?useSSL=false&allowPublicKeyRetrieval=true
+      DB_USERNAME: staymmate
+      DB_PASSWORD: change-this-password
+    depends_on:
+      db:
+        condition: service_healthy
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+volumes:
+  mysql-data:

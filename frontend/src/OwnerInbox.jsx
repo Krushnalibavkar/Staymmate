@@ -1,0 +1,13 @@
+import React,{useEffect,useRef,useState}from 'react';
+const API=import.meta.env.VITE_API_URL||'http://localhost:8081/api';
+
+export default function OwnerInbox(){
+  const[enquiries,setEnquiries]=useState([]),[phone,setPhone]=useState(''),[owner,setOwner]=useState(null),[notice,setNotice]=useState(''),count=useRef(null);
+  const load=()=>{if(!owner)return;fetch(`${API}/inbox/owner?phone=${encodeURIComponent(owner.phone)}`).then(response=>response.ok?response.json():[]).then(rows=>{if(count.current!==null&&rows.length>count.current)setNotice('New Staymmate PG request received.');count.current=rows.length;setEnquiries(rows)});};
+  useEffect(()=>{if(!owner)return;load();let timer=setInterval(load,5000);return()=>clearInterval(timer)},[owner]);
+  const signIn=async event=>{event.preventDefault();let response=await fetch(`${API}/owner/account?phone=${encodeURIComponent(phone)}`);if(!response.ok){setNotice('Owner sign-in failed. Use the registered owner mobile number.');return}setOwner(await response.json());};
+  const reply=async(id,message)=>{if(!message.trim())return;await fetch(`${API}/owner/enquiries/${id}/reply`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message})});setNotice('Reply sent to the member inside Staymmate.');load();};
+  if(!owner)return <section className="content profile"><h2>Owner sign in</h2><p>Sign in using your registered owner mobile number to open private PG messages.</p><form onSubmit={signIn}><input required type="tel" placeholder="Owner mobile number" value={phone} onChange={event=>setPhone(event.target.value)}/><button>Sign in</button>{notice&&<small className="notice">{notice}</small>}</form></section>;
+  return <section className="content"><h2>Owner messages</h2><p>Only the signed-in owner can view member contact details and reply inside Staymmate.</p>{notice&&<div className="success">{notice}<button onClick={()=>setNotice('')}>×</button></div>}{enquiries.length?enquiries.map(item=><OwnerRequest key={item.id} item={item} reply={reply}/>):<p>No PG enquiries yet.</p>}</section>;
+}
+function OwnerRequest({item,reply}){const[text,setText]=useState('');return <article className="review"><b>{item.pg?.name} — {item.name}</b><p>Phone: {item.phone} · Email: {item.email}</p><p><b>Member:</b> {item.message}</p>{item.ownerReply&&<p><b>You:</b> {item.ownerReply}</p>}{item.userReply&&<p><b>Member:</b> {item.userReply}</p>}<textarea placeholder="Write a reply" value={text} onChange={event=>setText(event.target.value)}/><button onClick={()=>{reply(item.id,text);setText('')}}>Send reply</button><small>{item.created&&new Date(item.created).toLocaleString()}</small></article>}
